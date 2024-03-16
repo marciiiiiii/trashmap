@@ -7,10 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(r *gin.Engine) {
-	dbHelper := mongodb.NewDatabaseHelper()
-
-	dbHelper.Connect()
+func SetupRoutes(r *gin.Engine, dbHelper *mongodb.DatabaseHelper) {
 
 	r.GET("/ping", func(c *gin.Context) {
 		result, err := dbHelper.FetchCollection("trashmap", "trashbins")

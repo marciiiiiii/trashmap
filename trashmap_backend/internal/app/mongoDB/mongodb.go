@@ -19,6 +19,10 @@ func NewDatabaseHelper() *DatabaseHelper {
 	return &DatabaseHelper{}
 }
 
+func (dbHelper *DatabaseHelper) GetClient() *mongo.Client {
+	return dbHelper.client
+}
+
 func (dbHelper *DatabaseHelper) Connect(databaseURI string) {
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(databaseURI))
@@ -27,12 +31,6 @@ func (dbHelper *DatabaseHelper) Connect(databaseURI string) {
 	}
 
 	dbHelper.client = client
-
-	// defer func() {
-	// 	if err := client.Disconnect(context.TODO()); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }()
 }
 
 func (dbHelper *DatabaseHelper) FetchCollection(databaseName, collectionName string) ([]bson.M, error) {
