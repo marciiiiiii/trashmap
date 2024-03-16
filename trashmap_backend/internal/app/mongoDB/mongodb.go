@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -20,20 +18,10 @@ type DatabaseHelper struct {
 func NewDatabaseHelper() *DatabaseHelper {
 	return &DatabaseHelper{}
 }
-func loadEnv() {
-	if err := godotenv.Load("../../internal/app/config/.env"); err != nil {
-		log.Println("No .env file found")
-	}
-}
 
-func (dbHelper *DatabaseHelper) Connect() {
-	loadEnv()
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		log.Fatal("You must set your 'MONGODB_URI' environment variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
-	}
+func (dbHelper *DatabaseHelper) Connect(databaseURI string) {
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(databaseURI))
 	if err != nil {
 		log.Fatal("panic in connect: ", err)
 	}
