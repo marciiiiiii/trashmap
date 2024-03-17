@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -31,9 +32,19 @@ func main() {
 	r := gin.Default()
 	routes.SetupRoutes(r, dbHelper)
 
+	handler := cors.Default().Handler(r) // debug CORS policy
+
+	// Cors policy for when specific origin can be set (flutter port is cahngiong with every restart)
+	// handler := cors.New(cors.Options{
+	// 	AllowedOrigins:   []string{"http://localhost:54653"},
+	// 	AllowedMethods:   []string{"GET"},
+	// 	AllowedHeaders:   []string{"Authorization"},
+	// 	AllowCredentials: true,
+	// }).Handler(r)
+
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: r,
+		Handler: handler,
 	}
 
 	go func() {

@@ -1,25 +1,19 @@
+import 'dart:convert';
 import 'dart:developer';
 
-import 'package:mongo_dart/mongo_dart.dart';
 import 'package:trashmap/models/consts.dart';
+import 'package:trashmap/models/trashbin.dart';
+import 'package:http/http.dart' as http;
 
-class MongoDBService {
-  static var _db, _collection;
+class DBService {
+  Future<List<Trashbin>> getAllTrashbins() async {
+    final response = await http.get(TRASHBIN_API_URL);
 
-  static connect() async {
-    _db = await Db.create(MONGODB_URL);
-    await _db.open();
-    print(_db);
-    _collection = _db.collection(COLL_NAME);
+    if (response.statusCode == 200) {
+      List<dynamic> trashbins = json.decode(response.body);
+      return trashbins.map((item) => Trashbin.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load trashbins');
+    }
   }
-
-  // Future<List<Map<String, dynamic>>> fetchData(String collectionName) async {
-  //   DbCollection collection = _db.collection(collectionName);
-  //   List<Map<String, dynamic>> data = await collection.find().toList();
-  //   return data;
-  // }
-
-  // void close() {
-  //   _db.close();
-  // }
 }

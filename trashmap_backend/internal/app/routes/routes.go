@@ -9,14 +9,15 @@ import (
 
 func SetupRoutes(r *gin.Engine, dbHelper *mongodb.DatabaseHelper) {
 
-	r.GET("/ping", func(c *gin.Context) {
-		result, err := dbHelper.FetchCollection("trashmap", "trashbins")
-		if err != nil {
-			log.Fatal("inside get: ", err)
-		}
-		c.JSON(200, result)
-		// c.JSON(200, gin.H{
-		// 	"message": "pong",
-		// })
+	r.GET("/trashbins", func(c *gin.Context) {
+		getTrashbins(c, dbHelper)
 	})
+}
+
+func getTrashbins(c *gin.Context, dbHelper *mongodb.DatabaseHelper) {
+	result, err := dbHelper.FetchCollection("trashmap", "trashbins")
+	if err != nil {
+		log.Fatal("inside get: ", err)
+	}
+	c.JSON(200, result)
 }
