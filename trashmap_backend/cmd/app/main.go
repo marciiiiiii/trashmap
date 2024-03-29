@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 	mongodb "trashmap_backend/internal/app/mongoDB"
-	"trashmap_backend/internal/app/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -19,7 +19,11 @@ import (
 
 func main() {
 	loadEnv()
-
+	token, err := generateJWT()
+	if err != nil {
+		log.Fatal(err)
+	}
+	println(token)
 	databaseUri := os.Getenv("MONGODB_URI")
 	if databaseUri == "" {
 		log.Fatal("You must set your 'MONGODB_URI' environment variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
@@ -30,7 +34,7 @@ func main() {
 	dbHelper.Connect(databaseUri)
 
 	r := gin.Default()
-	routes.SetupRoutes(r, dbHelper)
+	SetupRoutes(r, dbHelper) //why undefined?
 
 	handler := cors.Default().Handler(r) // debug CORS policy
 
@@ -79,7 +83,13 @@ func main() {
 }
 
 func loadEnv() {
-	if err := godotenv.Load("internal/app/config/.env"); err != nil {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	path_dir := dir + "/internal/app/config"
+
+	if err := godotenv.Load(filepath.Join(path_dir, ".env")); err != nil {
 		log.Println("No .env file found")
 	}
 }

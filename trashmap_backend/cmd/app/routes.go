@@ -1,4 +1,4 @@
-package routes
+package main
 
 import (
 	"log"
@@ -9,9 +9,9 @@ import (
 
 func SetupRoutes(r *gin.Engine, dbHelper *mongodb.DatabaseHelper) {
 
-	r.GET("/trashbins", func(c *gin.Context) {
+	r.GET("/trashbins", verifyJWT(func(c *gin.Context) {
 		getTrashbins(c, dbHelper)
-	})
+	}))
 }
 
 func getTrashbins(c *gin.Context, dbHelper *mongodb.DatabaseHelper) {
