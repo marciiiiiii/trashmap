@@ -2,10 +2,14 @@ package main
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -63,4 +67,73 @@ func verifyJWT(endpointHandler func(context *gin.Context)) gin.HandlerFunc {
 			context.String(http.StatusUnauthorized, "You're Unauthorized due to No token in the header")
 		}
 	})
+}
+
+func verifyAPIKey(endpointHandler func(context *gin.Context)) gin.HandlerFunc {
+
+	return gin.HandlerFunc(func(context *gin.Context) {
+		apiKeyHeader := "APIKey" // make dynamic later // context.GetHeader("APIKey")
+		apiKeys := map[string]string{
+			"first": os.Getenv("API_KEYS"),
+		} // creating a new map[string]string because I currently have no config/Database to store and load the API keys from
+
+		decodedAPIKeys := make(map[string][]byte)
+		for name, value := range apiKeys {
+			decodedKey, err := hex.DecodeString(value)
+			if err != nil {
+				context.String(http.StatusInternalServerError, "error decoding available API keys")
+				return
+			}
+
+			decodedAPIKeys[name] = decodedKey
+		}
+
+		apiKey, err := bearerToken(context, apiKeyHeader)
+		fmt.Print("API Key: ", apiKey)
+		fmt.Print("error: ", err)
+		if err != nil {
+			context.String(http.StatusUnauthorized, "invalid API key")
+			return
+
+		}
+
+		if _, ok := apiKeyIsValid(apiKey, decodedAPIKeys); !ok {
+			fmt.Print("API Key is not valid")
+			context.String(http.StatusUnauthorized, "invalid API key")
+			return
+		}
+		fmt.Print("API Key is valid")
+		endpointHandler(context)
+	})
+
+}
+
+func bearerToken(context *gin.Context, apiKeyHeader string) (string, error) {
+	rawToken := context.GetHeader(apiKeyHeader)
+	pieces := strings.SplitN(rawToken, ".", 2)
+
+	if len(pieces) < 2 {
+		return "", errors.New("token with incorrect bearer format")
+	}
+
+	token := strings.TrimSpace(pieces[1])
+
+	return token, nil
+}
+
+// api key will be sent as a plain, not encoded string. It will then be hashed within this function and compared to the hashed key in my database
+func apiKeyIsValid(rawKey string, availableKeys map[string][]byte) (string, bool) {
+	hash := sha256.Sum256([]byte(rawKey))
+	key := hash[:]
+	fmt.Print("Key: ", key)
+	fmt.Println("availableKeys: ", availableKeys)
+	for name, value := range availableKeys {
+		contentEqual := subtle.ConstantTimeCompare(value, key) == 1
+
+		if contentEqual {
+			return name, true
+		}
+	}
+
+	return "", false
 }
